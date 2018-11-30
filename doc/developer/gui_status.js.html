@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: gui/status.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: gui/status.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**@overview Contains class GuiStatus and its modules.*/
+
+function GuiStatus() {
+  /** @class GuiStatus
+   * @memberof module:GUI Managers
+   * @classdesc Class used for defining current app GUI status.
+   * @prop {Number} editingFiber=undefined; Index of currently being edited fiber. If any, undefined.
+   * @prop {Number} editingCP=undefined; Index of currently being edited control point. If any, undefined.
+   * @prop {Number} editingRegion=undefined; Index of currently being edited isotropic region. If any, undefined.
+   * @prop {Boolean} previewing=false Whether preview mode is active or not.
+   * @prop {Boolean} dragAndDropping=false Whether drag and drop control point edit mode is active or not.
+   */
+
+  this.previewing = false;
+  document.getElementById("switchViewButton").disabled = true;
+
+  this.dragAndDropping = false;
+
+  this.editingFiber = undefined;
+  this.editingCP = undefined;
+  this.editingRegion = undefined;
+  this.skeleting = undefined;
+}
+
+GuiStatus.prototype = {
+  editing: function(element, index) {
+    /** @function editing
+     * @memberof module:GUI Managers.GuiStatus
+     * @param {String} element Element to be edited. 'fiber', 'CP' or 'region'.
+     * @param {Number} index Index of the element in its array.
+     * @desc Changes the properties of the object matching the specified input.
+     */
+    switch (element) {
+      case 'fiber':
+        this.unediting();
+        this.editingFiber = index;
+        break;
+      case 'CP':
+        if (this.editingFiber === undefined) {
+          console.error('Tried to edit CP with any fiber in edit!');
+          break;
+        }
+        this.editingCP = index;
+        break;
+      case 'region':
+        this.unediting();
+        this.editingRegion = index;
+        break;
+      default:
+        console.error('Element string in status was not correct');
+    }
+
+    document.getElementById("switchViewButton").disabled = false;
+    if (!this.previewing) {
+      document.getElementById("switchViewButton").className = 'w3-btn w3-border-top w3-border-left w3-border-right w3-hover-aqua w3-block w3-ripple';
+    }
+  },
+  retrieve: function() {
+    /** @function retrieve
+     * @memberof module:GUI Managers.GuiStatus
+     * @desc Turns the scene into the current status. Refreshes the GUI.
+     */
+    if (this.previewing) {
+      phantom.addToScene(scene);
+      if (this.skeleting) {
+        phantom.addSkeleton(scene);
+      }
+    } else {
+      if (this.editingFiber !== undefined) {
+        fiberSelectClick(this.editingFiber, true);
+        if (this.editingCP !== undefined) {
+          cpSelectClick(this.editingFiber, this.editingCP, true);
+          if (guiStatus.dragAndDropping) {
+            guiStatus.dragAndDropping = false; //Simulate D&amp;D bare click
+            document.getElementById('ddbutton').onclick();
+          }
+        }
+      } else if (this.editingRegion !== undefined) {
+        regionSelectClick(this.editingRegion, true)
+        if (guiStatus.dragAndDropping) {
+          guiStatus.dragAndDropping = false; //Simulate D&amp;D bare click
+          document.getElementById('ddbutton').onclick();
+        }
+      } else {
+        if (this.skeleting) {
+          phantom.addAsSkeleton(scene);
+        } else {
+          phantom.addToScene(scene);
+        }
+        editExit();
+      }
+    }
+  },
+  unediting: function() {
+    /** @function unediting
+     * @memberof module:GUI Managers.GuiStatus
+     * @desc Turns the scene into unediting status. Restores the GUI.
+     */
+    this.previewing = false;
+    this.dragAndDropping = false;
+    scene.removeControls();
+
+    document.getElementById("switchViewButton").value = "Preview";
+    document.getElementById("switchViewButton").disabled = true;
+    document.getElementById("switchViewButton").className = 'w3-btn w3-border-top w3-border-left w3-border-right w3-hover-aqua w3-block w3-ripple';
+
+    this.editingFiber = undefined;
+    this.editingCP = undefined;
+    this.editingRegion = undefined;
+  },
+  isEditing: function() {
+    /** @function isEditing
+     * @memberof module:GUI Managers.GuiStatus
+     * @desc Returns true or false depending on if the user is or not in edit mode.
+     * @returns {Boolean} If the user is or not in edit mode
+     */
+
+    if ((this.editingFiber !== undefined) || (this.editingRegion !== undefined)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-GUI%2520Construction.html">GUI Construction</a></li><li><a href="module-GUI%2520Handlers.html">GUI Handlers</a></li><li><a href="module-GUI%2520Managers.html">GUI Managers</a></li><li><a href="module-THREE.html">THREE</a></li></ul><h3>Classes</h3><ul><li><a href="FiberSkeleton.html">FiberSkeleton</a></li><li><a href="FiberSource.html">FiberSource</a></li><li><a href="FiberTube.html">FiberTube</a></li><li><a href="IsotropicRegion.html">IsotropicRegion</a></li><li><a href="IsotropicRegionSource.html">IsotropicRegionSource</a></li><li><a href="module-GUI%2520Managers.GuiStatus.html">GuiStatus</a></li><li><a href="module-THREE.Scene.html">Scene</a></li><li><a href="Phantom.html">Phantom</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animate">animate</a></li><li><a href="global.html#buildAxes">buildAxes</a></li><li><a href="global.html#colors">colors</a></li><li><a href="global.html#dragAndDrop">dragAndDrop</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#loadPhantom">loadPhantom</a></li><li><a href="global.html#meshConstraints">meshConstraints</a></li><li><a href="global.html#precision">precision</a></li><li><a href="global.html#pushDownload">pushDownload</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#roundToPrecision">roundToPrecision</a></li><li><a href="global.html#show">show</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Nov 30 2018 14:58:58 GMT+0100 (STD)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

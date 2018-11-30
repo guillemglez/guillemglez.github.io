@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: gui/stylehandlers.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: gui/stylehandlers.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**@overview Contains all functions regarding selection lists hover*/
+
+function optionOnMouseOver(option) {
+  /** @function optionOnMouseOver
+   * @memberof module:GUI Handlers
+   * @param {DOM} option Parent option DOM element.
+   * @desc Applies hover classes to onmouseovered options in lists.
+   */
+  if (option.className == 'optionSelected') {
+    option.className = 'optionSelectedAndOnMouseOver';
+  } else if (option.className == 'optionUnselected') {
+    option.className = 'optionOnMouseOver';
+  }
+}
+
+function optionOnMouseLeave(option) {
+  /** @function optionOnMouseLeave
+   * @memberof module:GUI Handlers
+   * @param {DOM} option Parent option DOM element.
+   * @desc Restores class to onmouseovered options in lists.
+   */
+  if (option.className == 'optionSelectedAndOnMouseOver') {
+    option.className = 'optionSelected';
+  } else if (option.className == 'optionOnMouseOver') {
+    option.className = 'optionUnselected';
+  }
+}
+
+function optionSelect(option) {
+  /** @function optionSelect
+   * @memberof module:GUI Handlers
+   * @param {DOM} option Parent option DOM element.
+   * @desc Applies selected class to selected options in lists. Removes selected options from other lists.
+   */
+  var fiberSelector = document.getElementById("fiberSelector");
+  var regionSelector = document.getElementById("regionSelector");
+  if ((option.parentNode == fiberSelector) | (option.parentNode == regionSelector)) {
+    var fiberoptions = Array.from(fiberSelector.childNodes);
+    var regionoptions = Array.from(regionSelector.childNodes);
+
+    fiberoptions.forEach(function(element) {
+      element.className = 'optionUnselected';
+    });
+    regionoptions.forEach(function(element) {
+      element.className = 'optionUnselected';
+    });
+
+    if (option.parentNode == fiberSelector) {
+      if (regionoptions.length > 1) { //Avoids selecting (any) option.
+        regionoptions[0].className = 'optionSelected';
+      }
+    } else {
+      if (fiberoptions.length > 1) { //Avoids selecting (any) option.
+        fiberoptions[0].className = 'optionSelected';
+      }
+    }
+  } else {
+    var listoptions = Array.from(option.parentNode.childNodes);
+    listoptions.forEach(function(element) {
+      element.className = 'optionUnselected';
+    });
+  }
+  option.className = 'optionSelectedAndOnMouseOver'
+}
+
+function selectOption(list, number) {
+  /** @function selectOption
+   * @memberof module:GUI Handlers
+   * @param {DOM} list List's DOM element.
+   * @param {Number} number Index of option to select
+   * @desc Changes class of option as if it was clicked, given the list and its index.
+   */
+  var options = Array.from(list.childNodes);
+  optionSelect(options[number]);
+  optionOnMouseLeave(options[number]);
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-GUI%2520Construction.html">GUI Construction</a></li><li><a href="module-GUI%2520Handlers.html">GUI Handlers</a></li><li><a href="module-GUI%2520Managers.html">GUI Managers</a></li><li><a href="module-THREE.html">THREE</a></li></ul><h3>Classes</h3><ul><li><a href="FiberSkeleton.html">FiberSkeleton</a></li><li><a href="FiberSource.html">FiberSource</a></li><li><a href="FiberTube.html">FiberTube</a></li><li><a href="IsotropicRegion.html">IsotropicRegion</a></li><li><a href="IsotropicRegionSource.html">IsotropicRegionSource</a></li><li><a href="module-GUI%2520Managers.GuiStatus.html">GuiStatus</a></li><li><a href="module-THREE.Scene.html">Scene</a></li><li><a href="Phantom.html">Phantom</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animate">animate</a></li><li><a href="global.html#buildAxes">buildAxes</a></li><li><a href="global.html#colors">colors</a></li><li><a href="global.html#dragAndDrop">dragAndDrop</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#loadPhantom">loadPhantom</a></li><li><a href="global.html#meshConstraints">meshConstraints</a></li><li><a href="global.html#precision">precision</a></li><li><a href="global.html#pushDownload">pushDownload</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#roundToPrecision">roundToPrecision</a></li><li><a href="global.html#show">show</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Nov 30 2018 14:58:58 GMT+0100 (STD)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

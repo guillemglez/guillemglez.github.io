@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: js/dragAndDrop.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: js/dragAndDrop.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @overview Contains THREE.js functions responsible of the Drag and Dropping feature.
+ */
+
+function dragAndDrop() {
+  /** @function dragAndDrop
+   * @desc Builds or resets Drag and Drop interactive controls in the scene.
+   */
+
+  ddControls = new THREE.TransformControls(camera, renderer.domElement);
+  ddControls.name = 'dragAndDrop';
+  scene.removeControls();
+
+  if (guiStatus.editingFiber+1) {
+
+    scene.removeCPHighlight();
+    var object = phantom.cpHighlight(guiStatus.editingFiber, guiStatus.editingCP, 'green');
+
+    ddControls.addEventListener('change', function() {
+      var pos = this.object.position;
+      pos.x = roundToPrecision(pos.x);
+      pos.y = roundToPrecision(pos.y);
+      pos.z = roundToPrecision(pos.z);
+
+      document.getElementById('xvalue').value = pos.x;
+      document.getElementById('yvalue').value = pos.y;
+      document.getElementById('zvalue').value = pos.z;
+      render();
+
+      document.getElementById('guiFiberLength').innerHTML = roundToPrecision(phantom.fibers.source[guiStatus.editingFiber].length);
+    });
+
+    ddControls.addEventListener('mouseUp', function() {
+      var pos = object.position;
+      phantom.fibers.source[guiStatus.editingFiber].setControlPoint(guiStatus.editingCP, 'x', pos.x, true);
+      phantom.fibers.source[guiStatus.editingFiber].setControlPoint(guiStatus.editingCP, 'y', pos.y, true);
+      phantom.fibers.source[guiStatus.editingFiber].setControlPoint(guiStatus.editingCP, 'z', pos.z);
+    });
+
+  } else if (guiStatus.editingRegion+1) {
+    var object = phantom.isotropicRegions.sphere[guiStatus.editingRegion].mesh;
+
+    ddControls.addEventListener('change', function() {
+      var pos = this.object.position;
+      pos.x = roundToPrecision(pos.x);
+      pos.y = roundToPrecision(pos.y);
+      pos.z = roundToPrecision(pos.z);
+
+      document.getElementById('xvalue').value = pos.x;
+      document.getElementById('yvalue').value = pos.y;
+      document.getElementById('zvalue').value = pos.z;
+      render();
+    });
+
+    ddControls.addEventListener('mouseUp', function() {
+      var pos = object.position;
+      phantom.isotropicRegions.source[guiStatus.editingRegion].setCenter('x', pos.x, true);
+      phantom.isotropicRegions.source[guiStatus.editingRegion].setCenter('y', pos.y, true);
+      phantom.isotropicRegions.source[guiStatus.editingRegion].setCenter('z', pos.z);
+    });
+  }
+  ddControls.attach(object);
+  scene.add(ddControls);
+  render();
+}
+
+THREE.Scene.prototype.removeControls = function() {
+  /** @method removeControls
+   * @memberof module:THREE.Scene
+   * @desc Removes all Drag and Drop controls present in the Scene.
+   */
+  var remove = [];
+  var scene = this;
+  scene.children.forEach(function(object) {
+    if (object.name == 'dragAndDrop') {
+      remove.push(object);
+    }
+  });
+  remove.forEach(function(object) {
+    object.dispose();
+    scene.remove(object);
+  });
+  render();
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-GUI%2520Construction.html">GUI Construction</a></li><li><a href="module-GUI%2520Handlers.html">GUI Handlers</a></li><li><a href="module-GUI%2520Managers.html">GUI Managers</a></li><li><a href="module-THREE.html">THREE</a></li></ul><h3>Classes</h3><ul><li><a href="FiberSkeleton.html">FiberSkeleton</a></li><li><a href="FiberSource.html">FiberSource</a></li><li><a href="FiberTube.html">FiberTube</a></li><li><a href="IsotropicRegion.html">IsotropicRegion</a></li><li><a href="IsotropicRegionSource.html">IsotropicRegionSource</a></li><li><a href="module-GUI%2520Managers.GuiStatus.html">GuiStatus</a></li><li><a href="module-THREE.Scene.html">Scene</a></li><li><a href="Phantom.html">Phantom</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animate">animate</a></li><li><a href="global.html#buildAxes">buildAxes</a></li><li><a href="global.html#colors">colors</a></li><li><a href="global.html#dragAndDrop">dragAndDrop</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#loadPhantom">loadPhantom</a></li><li><a href="global.html#meshConstraints">meshConstraints</a></li><li><a href="global.html#precision">precision</a></li><li><a href="global.html#pushDownload">pushDownload</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#roundToPrecision">roundToPrecision</a></li><li><a href="global.html#show">show</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Nov 30 2018 14:58:58 GMT+0100 (STD)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

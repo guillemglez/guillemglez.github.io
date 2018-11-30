@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: js/save.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: js/save.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**@overview Contains functions regarding the parse, export and download process of a Phantom.*/
+// Parsable objects must contain only those parameters the loaders expect to find
+
+// Returns a JSON string with the phantom in ParsableFiber and ParsableRegion classes
+Phantom.prototype.export = function() {
+  /** @function export
+    * @memberof Phantom
+    * @desc Parses Fibers and Isotropic Regions in the Phantom and returns a parsed, indented string.
+    &lt;br>The JSON is fully compatible with Phantomas. Name string is used as name for property in JSON file.
+    Uppercase, spaces and non-alphanumeric characters are removed. In case two elements
+    share the same name, numeric values will be added at the end.
+    &lt;br>Information from fibers:
+    &lt;ul>&lt;li>Control points
+    &lt;li>Tangents
+    &lt;li>Radius
+    &lt;li>Color
+    &lt;/ul>
+    Information from Isotropic Regions:
+    &lt;ul>&lt;li>Center
+    &lt;li>Radius
+    &lt;li>Color
+    &lt;/ul>
+    * @returns {String} Parsed variable ready for pushing to download.
+  */
+  // PRIVATE CONSTRUCTORS
+  ParsableFiber = function(control_points, tangents, radius, color) {
+    this.control_points = control_points;
+    this.tangents = tangents;
+    this.radius = Number(radius);
+    this.color = Number(color.getHex());
+  }
+  ParsableRegion = function(center, radius, color) {
+    this.center = center;
+    this.radius = Number(radius);
+    this.color = Number(color.getHex());
+  }
+
+
+  var parsable_phantom = new Object;
+  parsable_phantom.fiber_geometries = new Object;
+  parsable_phantom.isotropic_regions = new Object;
+
+  // FIBERS
+  this.fibers.source.forEach(function(source, index) {
+    var control_points = [];
+    // Control Points are expected in a unique string.
+    source.controlPoints.forEach(function(cp) {
+      cp.forEach(function(element) {
+        control_points.push(element);
+      });
+    });
+
+    // Lowercase and replace spaces for underscore. Remove non alphanumeric characters.
+    var name = (source.name.toLowerCase()).replace(" ", "_").replace(/\W+/g, "");
+    // Check wheter this name exists or is empty. If so, add numbering.
+    var found = 0;
+    if (name == "") {
+      name = found.toString();
+    }
+    while (parsable_phantom.fiber_geometries[name]) {
+      if (found) { // If already numbered we clear the number present
+        name = name.slice(0, (found - 1).toString().length * -1);
+      }
+      name += found.toString();
+      found++;
+    }
+
+    var parsable_fiber = new ParsableFiber(control_points, source.tangents, source.radius, source.color);
+    parsable_phantom.fiber_geometries[name] = parsable_fiber;
+  });
+
+  // ISOTROPICREGIONS
+  this.isotropicRegions.source.forEach(function(source, index) {
+    // Lowercase and replace spaces for underscore. Remove non alphanumeric characters.
+    var name = (source.name.toLowerCase()).replace(" ", "_").replace(/\W+/g, "");
+    // Check wheter this name exists or is empty. If so, add numbering.
+    var found = 0;
+    if (name == "") {
+      name = found.toString();
+    }
+    while (parsable_phantom.isotropic_regions[name]) {
+      if (found) { // If already numbered we clear the number present
+        name = name.slice(0, (found - 1).toString().length * -1);
+      }
+      name += found.toString();
+      found++;
+    }
+
+    var parsable_region = new ParsableRegion(source.center, source.radius, source.color);
+    parsable_phantom.isotropic_regions[name] = parsable_region;
+  });
+
+  // null,2 automatically indents json file
+  var parsed_phantom = JSON.stringify(parsable_phantom, null, 2);
+
+  return parsed_phantom;
+}
+
+pushDownload = function(content) {
+  /** @function pushDownload
+    * @desc Pushes to the navigator the download of a string as a  ddmmyyyyhhmm-phantom_save.JSON file.
+    &lt;br> Requires an &amp;lt;a&amp;gt; element in the HTML with id="downloadAnchorElem".
+    * @param {string} content A string containing the content to be included in the file.
+  */
+
+  // From http://stackoverflow.com/questions/19721439/download-json-object-as-a-file-from-browser
+  function timestamp() {
+    // Partly from https://stackoverflow.com/questions/12409299/how-to-get-current-formatted-date-dd-mm-yyyy-in-javascript-and-append-it-to-an-i
+    var today = new Date();
+    var yyyy = today.getFullYear();
+    var mm = today.getMonth() + 1; //January is 0!
+    if (mm &lt; 10) {
+      mm = '0' + mm;
+    }
+    var dd = today.getDate();
+    if (dd &lt; 10) {
+      dd = '0' + dd;
+    }
+    var hh = today.getHours();
+    if (hh &lt; 10) {
+      hh = '0' + hh;
+    }
+    var mn = today.getMinutes();
+    if (mn &lt; 10) {
+      mn = '0' + mn;
+    }
+
+    var timestamp = dd + mm + yyyy + hh + mn;
+    return timestamp;
+  }
+  var uriContent = "data:text/json;charset=utf-8," + encodeURIComponent(content);
+  var dlAnchorElem = document.getElementById('downloadAnchorElem');
+  dlAnchorElem.setAttribute("href", uriContent);
+  dlAnchorElem.setAttribute("download", timestamp() + "-phantom_save.json");
+  dlAnchorElem.click();
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-GUI%2520Construction.html">GUI Construction</a></li><li><a href="module-GUI%2520Handlers.html">GUI Handlers</a></li><li><a href="module-GUI%2520Managers.html">GUI Managers</a></li><li><a href="module-THREE.html">THREE</a></li></ul><h3>Classes</h3><ul><li><a href="FiberSkeleton.html">FiberSkeleton</a></li><li><a href="FiberSource.html">FiberSource</a></li><li><a href="FiberTube.html">FiberTube</a></li><li><a href="IsotropicRegion.html">IsotropicRegion</a></li><li><a href="IsotropicRegionSource.html">IsotropicRegionSource</a></li><li><a href="module-GUI%2520Managers.GuiStatus.html">GuiStatus</a></li><li><a href="module-THREE.Scene.html">Scene</a></li><li><a href="Phantom.html">Phantom</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animate">animate</a></li><li><a href="global.html#buildAxes">buildAxes</a></li><li><a href="global.html#colors">colors</a></li><li><a href="global.html#dragAndDrop">dragAndDrop</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#loadPhantom">loadPhantom</a></li><li><a href="global.html#meshConstraints">meshConstraints</a></li><li><a href="global.html#precision">precision</a></li><li><a href="global.html#pushDownload">pushDownload</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#roundToPrecision">roundToPrecision</a></li><li><a href="global.html#show">show</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Nov 30 2018 14:58:58 GMT+0100 (STD)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

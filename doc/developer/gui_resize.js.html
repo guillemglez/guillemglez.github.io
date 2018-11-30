@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: gui/resize.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: gui/resize.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**@overview Contains resizeGUI() function*/
+/**@module GUI Managers*/
+
+// Resizes selector objects so those fit in the screen
+function resizeGUI() {
+  /** @function resizeGUI
+    * @memberof module:GUI Managers
+    * @desc Resizes element selector lists so those just take the amount of space
+    left in the screen. This avoids overflows and maintains the page size same as
+    the window size.
+    &lt;br>Called when elements are added or removed and when window is resized.
+    */
+
+  // PRIVATE FUNCTION Returns amout of window height in text lines
+  function countDocumentLines() {
+    // From http://stackoverflow.com/questions/4392868/javascript-find-divs-line-height-not-css-property-but-actual-line-height
+    function getLineHeight(element) {
+      var temp = document.createElement(element.nodeName);
+      temp.setAttribute("style", "margin:0px;padding:0px;font-family:" + element.style.fontFamily + ";font-size:" + element.style.fontSize);
+      temp.innerHTML = "test";
+      temp = element.parentNode.appendChild(temp);
+      var ret = temp.clientHeight;
+      temp.parentNode.removeChild(temp);
+      return ret;
+    }
+    var divHeight = window.innerHeight;
+    var lineHeight = getLineHeight(document.getElementById('leftGUI'));
+    var lines = Math.floor(divHeight / lineHeight);
+    return lines;
+  }
+
+  // Lines is the height amount in lines left for the gui elements.
+  var lines = countDocumentLines() - 9;
+  var leftGUI = document.getElementById("leftGUI");
+  var fiberSelector = document.getElementById("fiberSelector");
+  var regionSelector = document.getElementById("regionSelector");
+
+  // Width is subtracted 10 pixels for allowing space to scrollbar.
+  fiberSelector.style.width = (leftGUI.offsetWidth - 15).toString() + 'px';
+  regionSelector.style.width = (leftGUI.offsetWidth - 15).toString() + 'px';
+
+  // The resizable elements are selectors. We subtract space taken by other gui elements if those are present.
+  if (guiStatus.editingFiber !== undefined) {
+    lines -= 14 + Math.max(
+      phantom.fibers.source[guiStatus.editingFiber].controlPoints.length + 1,
+      12
+    );
+    var cpEditor = document.getElementById("cpEditor");
+    cpEditor.style.width = (leftGUI.offsetWidth - 65).toString() + 'px';
+  } else if (guiStatus.editingRegion !== undefined) {
+    lines -= 18;
+  }
+
+  // +1 is due to *none* option.
+  var fiberNumber = (phantom.fibers.source.length + 1)
+  var regionNumber = (phantom.isotropicRegions.source.length + 1)
+
+  var minsize = 3;
+
+  // Final size to be between total number of elements (no select scroll) and minsize
+  // 1.2 factor is due to line height correction
+  fiberSelector.style.height = (Math.min(Math.max(lines - regionNumber, minsize), fiberNumber) * 1.2).toString() + 'em';
+  regionSelector.style.height = (Math.min(Math.max(lines - fiberNumber, minsize), regionNumber) * 1.2).toString() + 'em';
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-GUI%2520Construction.html">GUI Construction</a></li><li><a href="module-GUI%2520Handlers.html">GUI Handlers</a></li><li><a href="module-GUI%2520Managers.html">GUI Managers</a></li><li><a href="module-THREE.html">THREE</a></li></ul><h3>Classes</h3><ul><li><a href="FiberSkeleton.html">FiberSkeleton</a></li><li><a href="FiberSource.html">FiberSource</a></li><li><a href="FiberTube.html">FiberTube</a></li><li><a href="IsotropicRegion.html">IsotropicRegion</a></li><li><a href="IsotropicRegionSource.html">IsotropicRegionSource</a></li><li><a href="module-GUI%2520Managers.GuiStatus.html">GuiStatus</a></li><li><a href="module-THREE.Scene.html">Scene</a></li><li><a href="Phantom.html">Phantom</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animate">animate</a></li><li><a href="global.html#buildAxes">buildAxes</a></li><li><a href="global.html#colors">colors</a></li><li><a href="global.html#dragAndDrop">dragAndDrop</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#loadPhantom">loadPhantom</a></li><li><a href="global.html#meshConstraints">meshConstraints</a></li><li><a href="global.html#precision">precision</a></li><li><a href="global.html#pushDownload">pushDownload</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#roundToPrecision">roundToPrecision</a></li><li><a href="global.html#show">show</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Nov 30 2018 14:58:58 GMT+0100 (STD)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

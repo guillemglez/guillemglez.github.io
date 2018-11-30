@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: gui/fiberedit.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: gui/fiberedit.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**@overview Contains functions regarding the fiber edition GUI.*/
+
+function fiberEdit(index) {
+  /** @function fiberEdit
+   * @memberof module:GUI Construction
+   * @param {Number} index The index in the array of the fiber to edit.
+   * @desc Adds the fiber edition GUI.
+   */
+  scene.removeCPHighlight(true);
+
+  // editGUI is emptied
+  var editGUI = document.getElementById('editGUI');
+  editGUI.innerHTML = "";
+  editGUI.style = "list-style-type: none";
+
+  // REMOVE BUTTON
+  var removebutton = document.createElement("BUTTON");
+  removebutton.style.float = "right";
+  removebutton.innerHTML = "Remove Fiber";
+  removebutton.id = "removebutton";
+  removebutton.title = "Remove Fiber (Del)"
+  removebutton.className = "w3-btn w3-hover-red w3-border w3-border-white"
+  removebutton.onclick = function() {
+    removeFiberClick()
+  };
+  editGUI.appendChild(removebutton);
+  editGUI.appendChild(document.createElement("BR"));
+  editGUI.appendChild(document.createElement("BR"));
+
+  // PROPERTY FIELD
+  var field = document.createElement("FIELDSET");
+  editGUI.appendChild(field);
+  var fiberprops = document.createElement("UL");
+
+  // NUMBER OF CONTROL POINTS AND COLOR
+  var fibercolor = phantom.fibers.source[index].color;
+  var colorpicker = document.createElement("INPUT");
+  colorpicker.type = "color";
+  colorpicker.value = "#" + fibercolor.getHexString();
+  colorpicker.className = 'w3-btn nameFieldLabel';
+  colorpicker.onchange = function() {
+    phantom.fibers.source[index].color = new THREE.Color(parseInt(this.value.slice(1,7), 16));
+    phantom.fibers.source[index].notify();
+    document.getElementById('fiberSelector').childNodes[index + 1].childNodes[0].style.color = phantom.fibers.source[index].color.getStyle();
+  }
+
+  var nameInput = document.createElement("INPUT");
+  nameInput.type = 'text';
+  nameInput.name = 'nameInput';
+  nameInput.value = phantom.fibers.source[index].name;
+  nameInput.className = "w3-input w3-border field";
+  // Disable key bindings when writing
+  nameInput.onkeyup = function(event) {
+    event.stopPropagation();
+    if (event.keyCode == 13) {
+      this.blur();
+    }
+  };
+  nameInput.onchange = function() {
+    phantom.fibers.source[index].name = this.value;
+    document.getElementById('fiberSelector').childNodes[index + 1].childNodes[1].innerHTML = this.value;
+  };
+
+  var controlPointsAndColor = document.createElement("LEGEND");
+  controlPointsAndColor.appendChild(colorpicker);
+  controlPointsAndColor.appendChild(nameInput);
+
+  field.appendChild(controlPointsAndColor);
+
+  // LENGTH
+  var length = document.createElement("LI");
+  var lengthspan = document.createElement("SPAN");
+  length.appendChild(lengthspan);
+
+  lengthspan.id = "guiFiberLength";
+  lengthspan.innerHTML = Math.floor(phantom.fibers.source[index].length * 10) / 10;
+
+  length.innerHTML += " units long";
+  fiberprops.appendChild(length);
+
+  // RADIUS
+  var radius = document.createElement("LI");
+  var radiuslabel = document.createElement("LABEL");
+  radiuslabel.innerHTML = "Radius: ";
+  var geometry = phantom.fibers.tube[index].mesh.geometry;
+
+  var radiusvalue = document.createElement("INPUT");
+  radiusvalue.style.width = "50px";
+  radiusvalue.type = "number";
+  radiusvalue.className = "w3-input w3-border field";
+  radiusvalue.min = 0;
+  radiusvalue.step = Math.pow(10, -precision);
+  radiusvalue.value = phantom.fibers.source[index].radius;
+  radiusvalue.onchange = function() {
+    this.value = roundToPrecision(Math.max(1 / (10 * precision), Math.abs(this.value))); //Radius cannot be negative, must be at least precision value.
+    phantom.fibers.source[index].radius = this.value;
+    phantom.fibers.source[index].notify();
+  };
+  radiusvalue.onkeyup = nameInput.onkeyup;
+
+  radius.appendChild(radiuslabel);
+  radius.appendChild(radiusvalue);
+  fiberprops.appendChild(radius);
+
+  // TANGENTS
+  var tangentslabel = document.createElement("LABEL");
+  tangentslabel.innerHTML = "Tangents: ";
+
+  var tangents = document.createElement("SELECT");
+  tangents.className = "w3-input w3-border field";
+  tangents.style.margin = '3px';
+  tangents.style.height = '1.8em';
+  tangents.onchange = function() {
+    phantom.fibers.source[index].tangents = this.value;
+    phantom.fibers.source[index].polyCalc();
+    phantom.fibers.source[index].notify();
+    this.blur();
+  }
+  var symmetric = document.createElement("OPTION");
+  symmetric.value = "symmetric";
+  symmetric.innerHTML = "Symmetric";
+  tangents.options.add(symmetric);
+  var incoming = document.createElement("OPTION");
+  incoming.value = "incoming";
+  incoming.innerHTML = "Incoming";
+  tangents.options.add(incoming);
+  var outgoing = document.createElement("OPTION");
+  outgoing.value = "outgoing";
+  outgoing.innerHTML = "Outgoing";
+  tangents.options.add(outgoing);
+
+  tangents.value = phantom.fibers.source[index].tangents;
+  fiberprops.appendChild(tangentslabel);
+  fiberprops.appendChild(tangents);
+  editGUI.appendChild(document.createElement("BR"));
+
+  field.appendChild(fiberprops);
+
+  addCPselect();
+}
+
+// This is a separate function so it may be refreshed independently
+function addCPselect() {
+  /** @function addCPselect
+    * @memberof module:GUI Construction
+    * @desc Adds the control point selector UI for the current fiber.
+    &lt;br>Built in a separate function so it may be refreshed independently.
+    */
+
+  var editGUI = document.getElementById('editGUI');
+
+  // Control Points edition table creation.
+  var table = document.createElement("TABLE");
+  table.id = 'cpTable';
+  // This creates a of the former CP to be used for the Undo Button.
+  phantom.fibers.source[guiStatus.editingFiber].controlPoints.slice(0);
+  editGUI.appendChild(table);
+  // This table contains two cells: left for CP select list and right for edit field (when editing)
+  var tr = document.createElement("TR");
+  table.appendChild(tr);
+  var td1 = document.createElement("TD");
+  tr.appendChild(td1);
+  var td2 = document.createElement("TD");
+  tr.appendChild(td2);
+  td2.id = "cpEditor";
+
+  // CONTROL POINTS SELECTION LIST
+  var cplist = document.createElement("UL");
+  cplist.className = 'enabledList';
+  var fiberindex = guiStatus.editingFiber;
+  // cplist.size = phantom.fibers.source[fiberindex].controlPoints.length + 1;
+  cplist.id = 'cpSelector';
+  cplist.style.width = '60px'
+  cplist.onmouseenter = function() {
+    if (cplist.childNodes[0].className == 'optionUnselected') {
+      scene.removeCPHighlight();
+      cpEdit(guiStatus.editingCP);
+    } else {
+      scene.removeCPHighlight(true);
+    }
+  };
+  cplist.onmouseleave = function() {
+    guiStatus.retrieve();
+  }
+
+  // *n* option
+  var option = document.createElement("LI");
+  option.innerHTML = '*n*'
+  option.title = "Exit edit (Esc)"
+  option.className = 'optionSelected';
+  option.onmouseenter = function() {
+    optionOnMouseOver(this);
+  }
+  option.onmouseleave = function() {
+    optionOnMouseLeave(this);
+  }
+  option.onclick = function() {
+    exitCPedit();
+    optionSelect(this);
+  };
+  cplist.appendChild(option);
+
+  // Each CP option
+  phantom.fibers.source[fiberindex].controlPoints.forEach(
+    function(point, index) {
+      var option = document.createElement("LI");
+      option.innerHTML = index.toString();
+      option.className = 'optionUnselected';
+
+      option.onmouseenter = function() {
+        phantom.cpHighlight(fiberindex, index, 'blue');
+        optionOnMouseOver(this);
+      };
+      option.onmouseleave = function() {
+        optionOnMouseLeave(this);
+      };
+      option.onclick = function() {
+        cpSelectClick(fiberindex, index);
+        optionSelect(this);
+      };
+
+      cplist.appendChild(option);
+    }
+  );
+  td1.appendChild(cplist);
+
+  resizeGUI();
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-GUI%2520Construction.html">GUI Construction</a></li><li><a href="module-GUI%2520Handlers.html">GUI Handlers</a></li><li><a href="module-GUI%2520Managers.html">GUI Managers</a></li><li><a href="module-THREE.html">THREE</a></li></ul><h3>Classes</h3><ul><li><a href="FiberSkeleton.html">FiberSkeleton</a></li><li><a href="FiberSource.html">FiberSource</a></li><li><a href="FiberTube.html">FiberTube</a></li><li><a href="IsotropicRegion.html">IsotropicRegion</a></li><li><a href="IsotropicRegionSource.html">IsotropicRegionSource</a></li><li><a href="module-GUI%2520Managers.GuiStatus.html">GuiStatus</a></li><li><a href="module-THREE.Scene.html">Scene</a></li><li><a href="Phantom.html">Phantom</a></li></ul><h3>Global</h3><ul><li><a href="global.html#animate">animate</a></li><li><a href="global.html#buildAxes">buildAxes</a></li><li><a href="global.html#colors">colors</a></li><li><a href="global.html#dragAndDrop">dragAndDrop</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#loadPhantom">loadPhantom</a></li><li><a href="global.html#meshConstraints">meshConstraints</a></li><li><a href="global.html#precision">precision</a></li><li><a href="global.html#pushDownload">pushDownload</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#roundToPrecision">roundToPrecision</a></li><li><a href="global.html#show">show</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Nov 30 2018 14:58:58 GMT+0100 (STD)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
